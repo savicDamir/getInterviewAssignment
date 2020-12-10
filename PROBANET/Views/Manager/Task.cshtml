@@ -1,0 +1,249 @@
+@model PROBANET.Models.Task
+@{
+    ViewData["Title"] = @ViewBag.me.Username;
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+
+<div class="alert alert-warning" role="alert" id="alertDel"></div>
+<div class="table">
+    <table class=" table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Deadline</th>
+                <th>Description</th>
+                <th>Assigned</th>
+                <th>Project</th>
+            </tr>
+        </thead>
+        <tbody id= "userTable">
+            @foreach(var i in @ViewBag.all)
+            {
+                
+                <form action="/Manager/UpdateTask" method="POST">
+                    <input type="hidden" name="indexId" value=@ViewBag.me.Id>
+                    <tr>
+                        <td>@i.Id
+                            <input type="hidden" name="Id" value='@i.Id'>
+                    </td>
+                    <td style="min-width: 150pt;">
+                    
+                    <select class="form-control"  name="Status" id="Status" >
+                        @if (@i.Status=="New") {
+                            <option  selected>new</option>
+                        }
+                        else
+                        {
+                            <option >new</option>
+                        }
+                        @if (@i.Status=="in progress") {
+                            <option selected>in progress</option>
+                        }
+                        else
+                        {
+                            <option >in progress</option>
+                        }
+                        @if (@i.Status=="finished") {
+                            <option selected>finished</option>
+                        }
+                        else
+                        {
+                            <option>finished</option>
+                        }
+
+                       
+                        </select></td>
+                    <td><input type="text" name="Progress" id="Progress" class="form-control-plaintext" value='@i.Progress'></td>
+                   <td>
+                        
+                        <input name="Deadline" id="Deadline" type="date" class="form-control" value="@i.Deadline.Year-@i.Deadline.Month.ToString().PadLeft(2, '0')-@i.Deadline.Day.ToString().PadLeft(2, '0')">
+                        
+                   </td>
+                    <td><input type="text" name="Description" id="Description" class="form-control-plaintext" value='@i.Description'></td>
+                    
+                    <td style="min-width: fit-content;">
+                    
+                    <select style="min-width: 150pt;" class="form-control"  name="Assigned" id="Assigned" >
+                        @if (@i.Assigned==-1)
+                        {
+                            <option selected value=''>...</option>
+                        }
+                        else
+                        {
+                            <option selected value='@i.Assigned'>@i.AssignedName</option>
+                            <option value=''>...</option>
+                        }
+
+                        @foreach (var j in @ViewBag.dev)
+                        {
+                            if (@j.Id==@i.Assigned)
+                            {<option value='@j.Id' selected>@j.Username</option>}
+                            else
+                            {
+                               <option value='@j.Id'>@j.Username</option> 
+                            }
+                        }
+                        </select></td>
+                    <td>@i.ProName
+                        <input type="hidden" name="ProId" value='@i.ProId'>
+                    </td>
+                    <td style="min-width: 150pt;"><input type="button" onclick="deleteTask(@i.Id)" value="Delete" class="btn btn-danger" />
+                        <input type="submit" value="Update" class="btn btn-info" /></td>
+                    
+					
+                </tr>
+                </form>
+            }
+            
+        </tbody>
+    </table>
+</div>
+
+<button type="button" class="btn btn-primary " onclick="showForm()">New task</button>
+    <div class="text-center">    
+    <div class="alert alert-warning dismidable" role="alert" id="alert"></div>
+    @using (Html.BeginForm("","",FormMethod.Post, new {id= "myForm"}))
+    {
+        <fieldset>            
+            @Html.ValidationMessageFor(m => m.Status,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+            @Html.LabelFor(m => m.Status, new {@class="col-md-2 control-label"})
+            <select class="form-control col-md-4" id="Status" name="Status">
+                 <option >new</option>
+                 <option >in progress</option>
+                 <option >finished</option>
+            </select>
+            </div>
+            
+            @Html.ValidationMessageFor(m => m.Progress,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Progress, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Progress, new {@class="form-control col-md-4"})
+            </div>
+            
+            
+            @Html.ValidationMessageFor(m => m.Deadline,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Deadline, new {@class="col-md-2 control-label"})
+                @Html.EditorFor(m =>m.Deadline, new { htmlAttributes = new { @class = "form-control col-md-4" } } )
+               
+            </div>
+
+            @Html.ValidationMessageFor(m => m.Description,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Description, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Description, new {@class="form-control col-md-4" })
+            </div>
+
+            @Html.ValidationMessageFor(m => m.Assigned,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+            @Html.LabelFor(m => m.Assigned, new {@class="col-md-2 control-label"})
+            <select class="form-control col-md-4" id="Assigned" name="Assigned">
+                  <option value="">...</option>
+                  @foreach (var j in @ViewBag.dev)
+                    {    
+                           <option value='@j.Id'>@j.Name</option> 
+                    } 
+            </select>
+            </div>
+
+            @Html.ValidationMessageFor(m => m.ProId,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+            @Html.LabelFor(m => m.ProId, new {@class="col-md-2 control-label"})
+            <select class="form-control col-md-4" id="ProId" name="ProId">
+                  @foreach (var j in @ViewBag.pro)
+                    {    
+                           <option value='@j.Id'>@j.Name</option> 
+                    } 
+            </select>
+            </div>
+            
+            <div class="row mt-2 d-flex justify-content-center">
+                <input type="button" onclick="newTask()" value="Save" class="mr-3 btn btn-primary " /> 
+                <input type="button" onclick="cancel()" value="Cancel" class="btn btn-secondary " /> 
+            </div>
+
+        </fieldset>
+    }
+</div>
+<script>
+    
+    $( document ).ready(function() {
+        $("#myForm").hide();
+        $("#alert").hide();
+        $("#alertDel").hide();
+        $('input[type="date"]').attr("min",new Date().toISOString().substr(0, 10));
+    });
+
+    function showForm()
+    {
+        $("#myForm").show();
+        $('#myForm').find("input[type=text], textbox").val("");
+        $('#myForm').find("#Deadline").val("2020-3-2");
+        $("#alert").hide();
+
+    }
+     function cancel()
+    {
+        $("#myForm").hide();
+        $("#alert").hide();
+    }
+    function newTask()
+    {
+        if ( !$("#myForm").valid()) return;
+        var data= $("#myForm").serialize();
+        $.ajax(
+            {
+                type:"Post",
+                url: "/Manager/AddTask",
+                data: data,
+                error: function (response)
+                {
+                    alert (response);
+                },
+                success: function(data, status, xhr)
+                {
+                    if (xhr.status==200)
+                    {
+                        location.reload();
+                    }
+                    if (xhr.status==210)
+                       { $("#alert").text('User is already in database'); $("#alert").show();}
+                    if (xhr.status==220)
+                       { $("#alert").text('Error with database');$("#alert").show();}
+                        
+                    
+                }
+            }
+        );
+    }
+        function deleteTask(id)
+        {
+         $.ajax(
+            {
+                type:"Post",
+                url: "/Manager/DeleteTask",
+                data: {Id : id},
+                error: function (response)
+                {
+                    alert (response);
+                },
+                success: function(data, status, xhr)
+                {
+                    if (xhr.status==200)
+                    {
+                        location.reload();
+                    }
+                    if (xhr.status==210)
+                       { $("#alertDel").text('User is not ready in database'); $("#alert").show();}
+                    if (xhr.status==220)
+                       { $("#alertDel").text('Error with database');$("#alert").show();}
+                        
+                    
+                }
+            }
+        );
+        }
+</script>

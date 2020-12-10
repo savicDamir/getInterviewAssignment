@@ -1,0 +1,145 @@
+@model Project
+@{
+    ViewData["Title"] = @ViewBag.me.Username;
+    Layout = "~/Views/Shared/_ManagerLayout.cshtml";
+}
+<div class="alert alert-warning" role="alert" id="alertDel"></div>
+<div class="table">
+    <table class=" table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Manager</th>
+                <th>Progress</th>
+                <th>Overdue</th>
+            </tr>
+        </thead>
+        <tbody id= "userTable">
+            @foreach(var i in @ViewBag.all)
+            {
+                <form action="/Manager/UpdateProject" method="POST">
+                <input type="hidden" name="indexId" value=@ViewBag.me.Id>
+                <tr>
+                    <td>@i.Id
+                        <input type="hidden" name="Id" value='@i.Id'>
+                    </td>
+                    <td><input type="text" name="Name" id="Name" class="form-control-plaintext " value='@i.Name'></td>
+                    <td><input type="text" name="Code" id="Code" class="form-control-plaintext" value='@i.Code'></td>
+                    <td>
+                    @ViewBag.me.Username
+                    <input type="hidden" name="ManId" id="ManId" value='@ViewBag.me.Id'>
+                    </td>
+                    <td>@i.Progress%</td>
+                    <td>@i.Overdue</td>
+                    <td style="min-width: 150pt;"><input type="button" onclick="deleteProject(@i.Id)" value="Delete" class="btn btn-danger" />
+                        <input type="submit" value="Update" class="btn btn-info" /></td>
+                    
+                </tr>
+                </form>
+            }
+            
+        </tbody>
+    </table>
+    <button type="button" class="btn btn-primary " onclick="showForm()">New project</button>
+<div class="text-center">    
+    <div class="alert alert-warning dismidable" role="alert" id="alert"></div>
+    @using (Html.BeginForm("Login","Home",FormMethod.Post, new {id= "myForm"}))
+    {
+        <fieldset>            
+            @Html.ValidationMessageFor(m => m.Name,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Name, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Name, new {@class="form-control col-md-4"})
+            </div>
+
+            
+            @Html.ValidationMessageFor(m => m.Code,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Code, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Code, new {@class="form-control col-md-4"})
+            </div>
+            <input type="hidden" name="ManId" id="ManId" value="@ViewBag.me.Id">
+            <div class="row mt-2 d-flex justify-content-center">
+                <input type="button" onclick="newProject()" value="Save" class="mr-3 btn btn-primary " /> 
+                <input type="button" onclick="cancel()" value="Cancel" class="btn btn-secondary " /> 
+            </div>
+
+        </fieldset>
+    }
+</div>
+<script>
+    $( document ).ready(function() {
+        $("#myForm").hide();
+        $("#alert").hide();
+        $("#alertDel").hide();
+    });
+    function showForm()
+    {
+        $("#myForm").show();
+        $('#myForm').find("input[type=text], textbox").val("");
+        $("#alert").hide();
+    }
+    function cancel()
+    {
+        $("#myForm").hide();
+        $("#alert").hide();
+    }
+    function newProject()
+    {
+        if ( !$("#myForm").valid()) return;
+        var data= $("#myForm").serialize();
+        $.ajax(
+            {
+                type:"Post",
+                url: "/Manager/AddProject",
+                data: data,
+                error: function (response)
+                {
+                    alert (response);
+                },
+                success: function(data, status, xhr)
+                {
+                    if (xhr.status==200)
+                    {
+                        location.reload();
+                    }
+                    if (xhr.status==210)
+                       { $("#alert").text('User is already in database'); $("#alert").show();}
+                    if (xhr.status==220)
+                       { $("#alert").text('Error with database');$("#alert").show();}
+                        
+                    
+                }
+            }
+        );
+    }
+    function deleteProject(id)
+    {
+         $.ajax(
+            {
+                type:"Post",
+                url: "/Manager/DeleteProject",
+                data: {Id : id},
+                error: function (response)
+                {
+                    alert (response);
+                },
+                success: function(data, status, xhr)
+                {
+                    if (xhr.status==200)
+                    {
+                        location.reload();
+                    }
+                    if (xhr.status==210)
+                       { $("#alertDel").text('User is not ready in database'); $("#alert").show();}
+                    if (xhr.status==220)
+                       { $("#alertDel").text('Error with database');$("#alert").show();}
+                        
+                    
+                }
+            }
+        );
+    }
+</script>

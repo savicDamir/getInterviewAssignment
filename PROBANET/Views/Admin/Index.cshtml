@@ -1,0 +1,187 @@
+@model User
+@{
+    ViewData["Title"] = @ViewBag.me.Username;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@if (@ViewBag.mes!="")
+{
+    <div class="alert alert-warning" role="alert"> @ViewBag.mes</div>
+}
+<div class="alert alert-warning" role="alert" id="alertDel"></div>
+<div class="table">
+    <table class=" table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Username</th>
+                <th>Password</th>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>email</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody id= "userTable">
+            @foreach(var i in @ViewBag.all)
+            {
+                <form action="/Admin/UpdateUser" method="POST">
+                <input type="hidden" name="indexId" value=@ViewBag.me.Id>
+                <tr>
+                    <td> @i.Id
+                        <input type="hidden" name="Id" value='@i.Id'>
+                    </td>
+                    <td><input type="text" name="Username" id="Username" class="form-control-plaintext " value='@i.Username'></td>
+                    <td><input type="text" name="Password" id="Password" class="form-control-plaintext" value='@i.Password'></td>
+                    <td><input type="text" name="Name" id="Name" class="form-control-plaintext" value='@i.Name'></td>
+                    <td><input type="text" name="Surname" id="Surname" class="form-control-plaintext" value='@i.Surname'></td>
+                    <td style="min-width: 200pt;"><input type="text" name="Email" id="Email" class="form-control-plaintext" value='@i.Email'></td>
+                    <td style="min-width: 150pt;">
+                    <select class="form-control"  name="Role" id="Role" >
+                        <option selected >@i.Role</option>
+                        <option>Administrator</option> 
+                        <option>Project Manager</option> 
+                        <option>Developer</option>
+                    </select></td>
+                    <td style="min-width: 150pt;"><input type="button" onclick="deleteUser(@i.Id)" value="Delete" class="btn btn-danger" />
+                        <input type="submit" value="Update" class="btn btn-info" /></td>
+                </tr>
+                </form>
+            }
+            
+        </tbody>
+    </table>
+</div>
+<button type="button" class="btn btn-primary " onclick="showForm()">New user</button>
+<div class="text-center">    
+    <div class="alert alert-warning dismidable" role="alert" id="alert"></div>
+    @using (Html.BeginForm("Login","Home",FormMethod.Post, new {id= "myForm"}))
+    {
+        <fieldset>            
+            @Html.ValidationMessageFor(m => m.Username,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Username, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Username, new {@class="form-control col-md-4"})
+            </div>
+
+            
+            @Html.ValidationMessageFor(m => m.Password,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Password, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Password, new {@class="form-control col-md-4"})
+            </div>
+            
+            
+            @Html.ValidationMessageFor(m => m.Name,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Name, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Name, new {@class="form-control col-md-4"})
+            </div>
+
+            @Html.ValidationMessageFor(m => m.Surname,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Surname, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Surname, new {@class="form-control col-md-4" })
+            </div>
+            
+            @Html.ValidationMessageFor(m => m.Email,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+                @Html.LabelFor(m => m.Email, new {@class="col-md-2 control-label"})
+                @Html.TextBoxFor(m => m.Email, new {@class="form-control col-md-4"})
+            </div>
+
+            @Html.ValidationMessageFor(m => m.Role,"", new { @class = "text-danger row justify-content-center" })
+            <div class="row mt-2 d-flex justify-content-center">
+            @Html.LabelFor(m => m.Username, new {@class="col-md-2 control-label"})
+            <select class="form-control col-md-4" id="Role" name="Role">
+                <option>Administrator</option> 
+                <option>Project Manager</option> 
+                <option>Developer</option> 
+            </select>
+            </div>
+            <div class="row mt-2 d-flex justify-content-center">
+                <input type="button" onclick="newUser()" value="Save" class="mr-3 btn btn-primary " /> 
+                <input type="button" onclick="cancel()" value="Cancel" class="btn btn-secondary " /> 
+            </div>
+
+        </fieldset>
+    }
+</div>
+
+
+<script>
+    $( document ).ready(function() {
+        $("#myForm").hide();
+        $("#alert").hide();
+        $("#alertDel").hide();
+    });
+    function cancel()
+    {
+        $("#myForm").hide();
+        $("#alert").hide();
+    }
+    function showForm()
+    {
+        $("#myForm").show();
+        $('#myForm').find("input[type=text], textbox").val("");
+        $("#alert").hide();
+    }
+    function newUser()
+    {
+        if ( !$("#myForm").valid()) return;
+        var data= $("#myForm").serialize();
+        $.ajax(
+            {
+                type:"Post",
+                url: "/Admin/AddUser",
+                data: data,
+                error: function (response)
+                {
+                    alert (response);
+                },
+                success: function(data, status, xhr)
+                {
+                    if (xhr.status==200)
+                    {
+                        location.reload();
+                    }
+                    if (xhr.status==210)
+                       { $("#alert").text('User is already in database'); $("#alert").show();}
+                    if (xhr.status==220)
+                       { $("#alert").text('Error with database');$("#alert").show();}
+                        
+                    
+                }
+            }
+        );
+
+    }
+    function deleteUser(id)
+    {
+        
+        
+        $.ajax(
+            {
+                type:"Post",
+                url: "/Admin/DeleteUser",
+                data: {Id : id},
+                error: function (response)
+                {
+                    alert (response);
+                },
+                success: function(data, status, xhr)
+                {
+                    if (xhr.status==200)
+                    {
+                        location.reload();
+                    }
+                    if (xhr.status==210)
+                       { $("#alertDel").text('User is not ready in database'); $("#alert").show();}
+                    if (xhr.status==220)
+                       { $("#alertDel").text('Error with database');$("#alert").show();}
+                        
+                    
+                }
+            }
+        );
+    }
+</script>
